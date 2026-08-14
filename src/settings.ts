@@ -1,4 +1,4 @@
-import { PluginSettingTab, Setting, type App, type Plugin, type SettingDefinitionItem } from 'obsidian';
+import { PluginSettingTab, Setting, type App, type Plugin } from 'obsidian';
 import type { ImageContextSettings } from './types';
 
 export const DEFAULT_SETTINGS: ImageContextSettings = {
@@ -12,7 +12,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-function clampNumber(value: unknown, fallback: number, min: number, max: number): number {
+function clampNumber(
+  value: unknown,
+  fallback: number,
+  min: number,
+  max: number,
+): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) return fallback;
   return Math.min(max, Math.max(min, value));
 }
@@ -21,93 +26,41 @@ export function normalizeSettings(data: unknown): ImageContextSettings {
   if (!isRecord(data)) return { ...DEFAULT_SETTINGS };
 
   return {
-    sizeThresholdKB: Math.round(clampNumber(data.sizeThresholdKB, DEFAULT_SETTINGS.sizeThresholdKB, 1, 1024 * 1024)),
-    jpegQuality: Math.round(clampNumber(data.jpegQuality, DEFAULT_SETTINGS.jpegQuality, 1, 100)),
+    sizeThresholdKB: Math.round(
+      clampNumber(
+        data.sizeThresholdKB,
+        DEFAULT_SETTINGS.sizeThresholdKB,
+        1,
+        1024 * 1024,
+      ),
+    ),
+    jpegQuality: Math.round(
+      clampNumber(data.jpegQuality, DEFAULT_SETTINGS.jpegQuality, 1, 100),
+    ),
     confirmDestructiveActions:
       typeof data.confirmDestructiveActions === 'boolean'
         ? data.confirmDestructiveActions
         : DEFAULT_SETTINGS.confirmDestructiveActions,
     showProgress:
-      typeof data.showProgress === 'boolean' ? data.showProgress : DEFAULT_SETTINGS.showProgress,
+      typeof data.showProgress === 'boolean'
+        ? data.showProgress
+        : DEFAULT_SETTINGS.showProgress,
   };
 }
 
-export async function loadSettings(plugin: Plugin): Promise<ImageContextSettings> {
-  const data = (await plugin.loadData()) as unknown;
+export async function loadSettings(
+  plugin: Plugin,
+): Promise<ImageContextSettings> {
+  const data = await plugin.loadData();
   return normalizeSettings(data);
 }
 
 export class ImageContextSettingTab extends PluginSettingTab {
-  constructor(app: App, private readonly plugin: Plugin & ImageContextPluginLike) {
+  constructor(
+    app: App,
+    private readonly plugin: Plugin & ImageContextPluginLike,
+  ) {
     super(app, plugin);
-  }
-
-  getSettingDefinitions(): SettingDefinitionItem[] {
-    return [
-      {
-        type: 'group',
-        heading: 'Compression',
-        items: [
-          {
-            name: 'Size threshold',
-            desc: 'Only compress images larger than this size.',
-            render: (setting: Setting) => {
-              setting.addText((text) => {
-                text.setValue(String(this.plugin.settings.sizeThresholdKB));
-                text.inputEl.type = 'number';
-                text.inputEl.min = '1';
-                text.inputEl.max = String(1024 * 1024);
-                text.onChange((value) => {
-                  const parsed = Number.parseInt(value, 10);
-                  if (!Number.isFinite(parsed) || parsed < 1) return;
-                  this.plugin.settings.sizeThresholdKB = Math.min(parsed, 1024 * 1024);
-                  void this.plugin.saveSettings();
-                });
-              });
-            },
-          },
-          {
-            name: 'JPEG quality',
-            desc: 'Quality used when compressing JPEG images. Higher values preserve more detail.',
-            render: (setting: Setting) => {
-              setting.addSlider((slider) => {
-                slider
-                  .setLimits(1, 100, 1)
-                  .setValue(this.plugin.settings.jpegQuality)
-                  .setDynamicTooltip()
-                  .onChange((value) => {
-                    this.plugin.settings.jpegQuality = Math.round(value);
-                    void this.plugin.saveSettings();
-                  });
-              });
-            },
-          },
-        ],
-      },
-      {
-        type: 'group',
-        heading: 'Safety',
-        items: [
-          {
-            name: 'Confirm destructive actions',
-            desc: 'Ask before replacing an existing image during compression.',
-            control: { type: 'toggle', key: 'confirmDestructiveActions' },
-          },
-          {
-            name: 'Show progress',
-            desc: 'Show a compact progress indicator during image compression.',
-            control: { type: 'toggle', key: 'showProgress' },
-          },
-        ],
-      },
-      {
-        name: 'Supported formats',
-        desc: 'JPEG, PNG, and webp can be safely recompressed without changing their file extension. GIF and SVG are left untouched to avoid losing animation or vector data.',
-        render: (setting: Setting) => {
-          setting.addExtraButton((button) => button.setIcon('info').setTooltip('Supported image formats'));
-        },
-      },
-    ];
   }
 
   display(): void {
@@ -119,7 +72,7 @@ export class ImageContextSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName('Size threshold')
-      .setDesc('Only compress images larger than this size.')
+      .setDesc('Only compress images larger than this size in KB.')
       .addText((text) => {
         text
           .setPlaceholder('300')
@@ -127,14 +80,20 @@ export class ImageContextSettingTab extends PluginSettingTab {
           .onChange((value) => {
             const parsed = Number.parseInt(value, 10);
             if (!Number.isFinite(parsed) || parsed < 1) return;
-            this.plugin.settings.sizeThresholdKB = Math.min(parsed, 1024 * 1024);
+
+            this.plugin.settings.sizeThresholdKB = Math.min(
+              parsed,
+              1024 * 1024,
+            );
             void this.plugin.saveSettings();
           });
       });
 
     new Setting(containerEl)
       .setName('JPEG quality')
-      .setDesc('Quality used when compressing JPEG images. Higher values preserve more detail.')
+      .setDesc(
+        'Quality used when compressing JPEG images. Higher values preserve more detail.',
+      )
       .addSlider((slider) => {
         slider
           .setLimits(1, 100, 1)
@@ -152,10 +111,12 @@ export class ImageContextSettingTab extends PluginSettingTab {
       .setName('Confirm destructive actions')
       .setDesc('Ask before replacing an existing image during compression.')
       .addToggle((toggle) => {
-        toggle.setValue(this.plugin.settings.confirmDestructiveActions).onChange((value) => {
-          this.plugin.settings.confirmDestructiveActions = value;
-          void this.plugin.saveSettings();
-        });
+        toggle
+          .setValue(this.plugin.settings.confirmDestructiveActions)
+          .onChange((value) => {
+            this.plugin.settings.confirmDestructiveActions = value;
+            void this.plugin.saveSettings();
+          });
       });
 
     new Setting(containerEl)
