@@ -283,15 +283,14 @@ export default class ImageContextPlugin extends Plugin {
         return;
       }
 
-      await this.app.openWithDefaultApp(file.path);
+      // `App.openWithDefaultApp()` is not part of Obsidian's public TypeScript API.
+      // Fall back to opening the image through Obsidian's supported workspace API.
+      await this.app.workspace.openLinkText(file.path, '', true);
+      new Notice('Native sharing is unavailable, so the image was opened in Obsidian.');
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') return;
       console.error('Share image failed', error);
-      try {
-        await this.app.openWithDefaultApp(file.path);
-      } catch {
-        new Notice('Could not share or open the image.');
-      }
+      new Notice('Could not share or open the image.');
     }
   }
 
