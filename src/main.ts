@@ -285,7 +285,7 @@ export default class ImageContextPlugin extends Plugin {
 
       // `App.openWithDefaultApp()` is not part of Obsidian's public TypeScript API.
       // Fall back to opening the image through Obsidian's supported workspace API.
-      await this.app.workspace.openLinkText(file.path, '', true);
+      this.app.workspace.openLinkText(file.path, '', true);
       new Notice('Native sharing is unavailable, so the image was opened in Obsidian.');
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') return;

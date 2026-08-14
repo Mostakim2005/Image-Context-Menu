@@ -1,4 +1,4 @@
-import { PluginSettingTab, Setting, type App, type Plugin } from 'obsidian';
+import { PluginSettingTab, Setting, type App, type Plugin, type SettingDefinitionItem } from 'obsidian';
 import type { ImageContextSettings } from './types';
 
 export const DEFAULT_SETTINGS: ImageContextSettings = {
@@ -39,7 +39,75 @@ export async function loadSettings(plugin: Plugin): Promise<ImageContextSettings
 
 export class ImageContextSettingTab extends PluginSettingTab {
   constructor(app: App, private readonly plugin: Plugin & ImageContextPluginLike) {
-    super(app, plugin as Plugin);
+    super(app, plugin);
+  }
+
+  getSettingDefinitions(): SettingDefinitionItem[] {
+    return [
+      {
+        type: 'group',
+        heading: 'Compression',
+        items: [
+          {
+            name: 'Size threshold',
+            desc: 'Only compress images larger than this size.',
+            render: (setting: Setting) => {
+              setting.addText((text) => {
+                text.setValue(String(this.plugin.settings.sizeThresholdKB));
+                text.inputEl.type = 'number';
+                text.inputEl.min = '1';
+                text.inputEl.max = String(1024 * 1024);
+                text.onChange((value) => {
+                  const parsed = Number.parseInt(value, 10);
+                  if (!Number.isFinite(parsed) || parsed < 1) return;
+                  this.plugin.settings.sizeThresholdKB = Math.min(parsed, 1024 * 1024);
+                  void this.plugin.saveSettings();
+                });
+              });
+            },
+          },
+          {
+            name: 'JPEG quality',
+            desc: 'Quality used when compressing JPEG images. Higher values preserve more detail.',
+            render: (setting: Setting) => {
+              setting.addSlider((slider) => {
+                slider
+                  .setLimits(1, 100, 1)
+                  .setValue(this.plugin.settings.jpegQuality)
+                  .setDynamicTooltip()
+                  .onChange((value) => {
+                    this.plugin.settings.jpegQuality = Math.round(value);
+                    void this.plugin.saveSettings();
+                  });
+              });
+            },
+          },
+        ],
+      },
+      {
+        type: 'group',
+        heading: 'Safety',
+        items: [
+          {
+            name: 'Confirm destructive actions',
+            desc: 'Ask before replacing an existing image during compression.',
+            control: { type: 'toggle', key: 'confirmDestructiveActions' },
+          },
+          {
+            name: 'Show progress',
+            desc: 'Show a compact progress indicator during image compression.',
+            control: { type: 'toggle', key: 'showProgress' },
+          },
+        ],
+      },
+      {
+        name: 'Supported formats',
+        desc: 'JPEG, PNG, and webp can be safely recompressed without changing their file extension. GIF and SVG are left untouched to avoid losing animation or vector data.',
+        render: (setting: Setting) => {
+          setting.addExtraButton((button) => button.setIcon('info').setTooltip('Supported image formats'));
+        },
+      },
+    ];
   }
 
   display(): void {
