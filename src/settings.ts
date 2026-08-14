@@ -51,7 +51,7 @@ export function normalizeSettings(data: unknown): ImageContextSettings {
 export async function loadSettings(
   plugin: Plugin,
 ): Promise<ImageContextSettings> {
-  const data = await plugin.loadData();
+  const data = (await plugin.loadData()) as unknown;
   return normalizeSettings(data);
 }
 
@@ -72,7 +72,7 @@ export class ImageContextSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName('Size threshold')
-      .setDesc('Only compress images larger than this size in KB.')
+      .setDesc('Only compress images larger than this size in kb.')
       .addText((text) => {
         text
           .setPlaceholder('300')
@@ -131,7 +131,7 @@ export class ImageContextSettingTab extends PluginSettingTab {
 
     new Setting(containerEl).setName('Supported formats').setHeading();
     containerEl.createEl('p', {
-      text: 'JPEG, PNG, and WebP can be safely recompressed without changing their file extension. GIF and SVG are left untouched to avoid losing animation or vector data.',
+      text: 'JPEG, PNG, and webp can be safely recompressed without changing their file extension. GIF and SVG are left untouched to avoid losing animation or vector data.',
       cls: 'setting-item-description',
     });
   }

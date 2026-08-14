@@ -285,7 +285,7 @@ export default class ImageContextPlugin extends Plugin {
 
       // `App.openWithDefaultApp()` is not part of Obsidian's public TypeScript API.
       // Fall back to opening the image through Obsidian's supported workspace API.
-      this.app.workspace.openLinkText(file.path, '', true);
+      void this.app.workspace.openLinkText(file.path, '', true);
       new Notice('Native sharing is unavailable, so the image was opened in Obsidian.');
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') return;
@@ -294,8 +294,8 @@ export default class ImageContextPlugin extends Plugin {
     }
   }
 
-  private async showImageInfo(image: HTMLImageElement, file: TFile | null): Promise<void> {
-    const info = await this.vaultImageService.getImageInfo(image, file);
+  private showImageInfo(image: HTMLImageElement, file: TFile | null): void {
+    const info = this.vaultImageService.getImageInfo(image, file);
     const size = formatBytes(info.sizeBytes);
     new Notice(`${info.fileName} · ${info.width} × ${info.height} · ${size}`);
   }
