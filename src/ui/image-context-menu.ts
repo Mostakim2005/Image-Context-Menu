@@ -20,22 +20,22 @@ export function showImageContextMenu(
 ): void {
   const menu = new Menu();
 
-  menu.addItem((item) => addAction(item, 'Copy as JPEG', 'image-file', actions.copyAsJpeg));
-  menu.addItem((item) => addAction(item, 'Copy embed link', 'file-text', actions.copyEmbed));
+  menu.addItem((item) => addAction(item, 'Copy as JPEG', 'image-file', () => actions.copyAsJpeg()));
+  menu.addItem((item) => addAction(item, 'Copy embed link', 'file-text', () => actions.copyEmbed()));
 
   if (target.isVaultImage && target.file) {
-    menu.addItem((item) => addAction(item, 'Share image', 'share-2', actions.share));
+    menu.addItem((item) => addAction(item, 'Share image', 'share-2', () => actions.share()));
     menu.addSeparator();
-    menu.addItem((item) => addAction(item, 'Resize image', 'maximize-2', actions.resize));
-    menu.addItem((item) => addAction(item, 'Compress image', 'file-down', actions.compress));
-    menu.addItem((item) => addAction(item, 'Rename image', 'pencil', actions.rename));
+    menu.addItem((item) => addAction(item, 'Resize image', 'maximize-2', () => actions.resize()));
+    menu.addItem((item) => addAction(item, 'Compress image', 'file-down', () => actions.compress()));
+    menu.addItem((item) => addAction(item, 'Rename image', 'pencil', () => actions.rename()));
   } else if (/^https?:\/\//i.test(target.source)) {
-    menu.addItem((item) => addAction(item, 'Copy external link', 'external-link', actions.copyExternalLink));
+    menu.addItem((item) => addAction(item, 'Copy external link', 'external-link', () => actions.copyExternalLink()));
   }
 
   menu.addSeparator();
-  menu.addItem((item) => addAction(item, 'Image information', 'info', actions.showInfo));
-  menu.addItem((item) => addAction(item, 'Open image', 'maximize', actions.openImage));
+  menu.addItem((item) => addAction(item, 'Image information', 'info', () => actions.showInfo()));
+  menu.addItem((item) => addAction(item, 'Open image', 'maximize', () => actions.openImage()));
 
   menu.showAtPosition({ x: event.pageX, y: event.pageY });
 }

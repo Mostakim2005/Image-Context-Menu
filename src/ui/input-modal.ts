@@ -23,14 +23,12 @@ export class InputModal extends Modal {
       value: this.initialValue,
     });
 
-    const textInput = input as HTMLInputElement;
-
     const buttons = contentEl.createDiv({ cls: 'image-context-modal-buttons' });
     const cancel = buttons.createEl('button', { text: 'Cancel' });
     const submit = buttons.createEl('button', { text: 'OK', cls: 'mod-cta' });
 
     const submitValue = (): void => {
-      const value = textInput.value.trim();
+      const value = input.value.trim();
       if (!value) {
         new Notice('Please enter a value.');
         return;
@@ -41,12 +39,12 @@ export class InputModal extends Modal {
 
     cancel.addEventListener('click', () => this.close());
     submit.addEventListener('click', submitValue);
-    textInput.addEventListener('keydown', (event) => {
+    input.addEventListener('keydown', (event) => {
       if (event.key === 'Enter') submitValue();
       if (event.key === 'Escape') this.close();
     });
 
-    window.setTimeout(() => textInput.focus(), 10);
+    window.setTimeout(() => input.focus(), 10);
   }
 
   onClose(): void {
