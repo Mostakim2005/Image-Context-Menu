@@ -18,11 +18,12 @@ export class ClipboardService {
 
   private imageToJpeg(image: HTMLImageElement): Promise<Blob> {
     return new Promise((resolve, reject) => {
-      const canvas = document.createElement('canvas');
+      const canvas = document.body.createEl('canvas');
       canvas.width = image.naturalWidth;
       canvas.height = image.naturalHeight;
       const context = canvas.getContext('2d');
       if (!context) {
+        canvas.remove();
         reject(new Error('Canvas rendering is unavailable.'));
         return;
       }
@@ -31,6 +32,7 @@ export class ClipboardService {
       context.fillRect(0, 0, canvas.width, canvas.height);
       context.drawImage(image, 0, 0);
       canvas.toBlob((blob) => {
+        canvas.remove();
         if (blob) resolve(blob);
         else reject(new Error('Could not encode the image as JPEG.'));
       }, 'image/jpeg', 0.9);

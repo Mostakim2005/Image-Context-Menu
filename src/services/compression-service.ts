@@ -39,7 +39,7 @@ export class CompressionService {
       const arrayBuffer = await this.app.vault.readBinary(file);
       const blob = new Blob([arrayBuffer], { type: getMimeType(extension) });
       const image = await this.loadImage(blob);
-      const output = await this.imageToBlob(image, extension as SupportedImageFormat, settings.jpegQuality / 100);
+      const output = await this.imageToBlob(image, extension, settings.jpegQuality / 100);
 
       if (!output) {
         return {
@@ -102,17 +102,19 @@ export class CompressionService {
     quality: number,
   ): Promise<Blob | null> {
     return new Promise((resolve, reject) => {
-      const canvas = document.createElement('canvas');
+      const canvas = document.body.createEl('canvas');
       canvas.width = image.naturalWidth;
       canvas.height = image.naturalHeight;
 
       if (canvas.width <= 0 || canvas.height <= 0) {
+        canvas.remove();
         reject(new Error('Image has invalid dimensions.'));
         return;
       }
 
       const context = canvas.getContext('2d');
       if (!context) {
+        canvas.remove();
         reject(new Error('Canvas rendering is unavailable.'));
         return;
       }
@@ -121,7 +123,10 @@ export class CompressionService {
       const mimeType = format === 'png' ? 'image/png' : getMimeType(format);
       const effectiveQuality = format === 'png' ? undefined : quality;
 
-      canvas.toBlob(resolve, mimeType, effectiveQuality);
+      canvas.toBlob((blob) => {
+        canvas.remove();
+        resolve(blob);
+      }, mimeType, effectiveQuality);
     });
   }
 }
